@@ -23,3 +23,7 @@ def reorderPoint(
     meanDemand: int, leadTime: int, stdDeviationDemand: int, safetyFactor: int
 ):
     pass
+
+
+def economicOrderQuantity():
+    pass
