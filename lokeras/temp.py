@@ -1,6 +1,6 @@
 import sqlite3
 
-import pandas as pd
+# import pandas as pd
 
 conn = sqlite3.connect("mi_base.db")
 cursor = conn.cursor()

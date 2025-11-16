@@ -2,7 +2,7 @@ import random
 import sqlite3
 from datetime import datetime, timedelta
 
-import pandas as pd
+# import pandas as pd
 
 DB_PATH = "inventario.db"
 
@@ -32,6 +32,19 @@ def insertar_proveedores(conn, n=5):
     )
 
     print(f"✔ {n} proveedores insertados.")
+    return list(range(1, n + 1))
+
+
+def insertar_categorias(conn, n=3):
+    categorias = []
+    for i in range(n):
+        categorias.append((f"Categoría {i + 1}", f"Descripción cat {i + 1}"))
+
+    conn.executemany(
+        "INSERT INTO categorias(nombre, descripcion) VALUES (?, ?)", categorias
+    )
+
+    print(f"✔ {n} categorías insertadas.")
     return list(range(1, n + 1))
 
 
@@ -157,6 +170,7 @@ if __name__ == "__main__":
     conn.execute("PRAGMA foreign_keys = ON;")
 
     proveedores = insertar_proveedores(conn)
+    categorias = insertar_categorias(conn)
     productos = insertar_productos(conn, proveedores)
     generar_ventas(conn, productos)
     generar_compras(conn, productos, proveedores)
