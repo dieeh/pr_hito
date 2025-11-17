@@ -55,7 +55,7 @@ def insertar_productos(conn, proveedores, n=10):
             (
                 f"Producto {i + 1}",
                 "Descripción de prueba",
-                random.randint(1, 3),  # categoría
+                random.randint(1, 5),  # categoría
                 round(random.uniform(1000, 6000), 1),  # precio unitario
                 random.randint(20, 100),  # stock inicial
                 "unid",
@@ -169,11 +169,11 @@ if __name__ == "__main__":
     conn = sqlite3.connect(DB_PATH)
     conn.execute("PRAGMA foreign_keys = ON;")
 
-    proveedores = insertar_proveedores(conn)
-    categorias = insertar_categorias(conn)
-    productos = insertar_productos(conn, proveedores)
+    proveedores = insertar_proveedores(conn, 10)
+    categorias = insertar_categorias(conn, 5)
+    productos = insertar_productos(conn, proveedores, 30)
     generar_ventas(conn, productos)
-    generar_compras(conn, productos, proveedores)
+    generar_compras(conn, productos, proveedores, 60)
 
     conn.commit()
     conn.close()
