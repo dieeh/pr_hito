@@ -24,7 +24,7 @@ st.set_page_config(
 )
 
 
-# --- FUNCIÓN PARA INYECTAR CSS ---
+# region --- FUNCIÓN PARA INYECTAR CSS ---
 def local_css(file_name):
     with open(file_name) as f:
         st.markdown(f'<style>{f.read()}</style>', unsafe_allow_html=True)
@@ -33,8 +33,10 @@ try:
     local_css("style.css") 
 except FileNotFoundError:
     st.error("Archivo style.css no encontrado. Crea un archivo en la raíz del proyecto.")
+# endregion
 
-tab1, tab2 = st.tabs(["Dashboard", "Reportes"])
+
+tab1, tab2 = st.tabs(["Dashboard", "Reportes"]) # NOTE MENU DE NAVEGACION
 
 with tab1:
     col1, col2, col3 = st.columns(3)
@@ -43,7 +45,7 @@ with tab1:
         st.title('Hola, Nombre Apellido')
         st.text('Hoy es Lunes, 17 del noviembre de 2025')
     with col2:
-        with stylable_container(key="setso", css_styles=""):
+        with stylable_container(key="ventasxcategoria", css_styles=""):
             st.text('Ventas por Categoria')
 
             datos = {
@@ -64,7 +66,7 @@ with tab1:
             color_discrete_sequence=['#d3d3d3', '#767676', '#4f4f4f', '#6aff67','#ffffff']
         )
 
-            fig.update_traces(textposition='inside', textinfo='percent+label')
+            fig.update_traces(textposition='inside', textinfo='value+label')
             fig.update_layout(uniformtext_minsize=12, uniformtext_mode='hide', showlegend=False)
             
             st.plotly_chart(fig, use_container_width=True)

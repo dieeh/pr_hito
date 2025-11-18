@@ -38,19 +38,21 @@
 }
 /* #endregion */
 
-/* navbar button */
+/* #region navbar button */
 [data-testid="stExpandSidebarButton"] {
     position: relative;
     top: 10.1rem;
 }
+/* #endregion */
 
-/* Esconder contenedor vacio */
+/* #region Esconder contenedor vacio */
 .stMainBlockContainer > [data-testid="stVerticalBlock"] >[data-testid="stElementContainer"] {
     display: none;
 }
+/* #endregion */
 
-
-.st-key-st-key-setso {
+/* #region ventasxcategoria container  */
+.st-key-st-key-ventasxcategoria {
     background-color: var(--secondaryBackgroundColor);
     border-radius: 1rem;
     /* padding: 1rem 1.5rem 1.5rem 1.5rem; */
@@ -61,7 +63,7 @@
     flex-direction: row;
     
 }
-.st-key-st-key-setso .stText {
+.st-key-st-key-ventasxcategoria .stText {
     font-size: 1.4rem;
     transform: rotate(-90deg);
     -ms-transform: rotate(-90deg);
@@ -74,25 +76,17 @@
     color: #0d0d0d;
 }
 
-/* indentificador de grafigos */
-.marks {
-    background: transparent !important;
-}
-.marks text {
-    color: #0d0d0d !important;
-    fill: #000 !important;
-    font-size: .8rem;
-    font-weight: bold;
-}
-
-.st-key-st-key-setso div:has(.stText){
+.st-key-st-key-ventasxcategoria div:has(.stText){
     width: 40px !important;
-
-
 }
 
+.st-key-st-key-ventasxcategoria .stText > div {
+    font-weight: 600;
+}
+/* #endregion */
+
+/* #region estilos globales de los graficos */
 .main-svg {
-    /* top: -10rem; */
     bottom: 0;
     right: 0;
     left: 0;
@@ -110,5 +104,6 @@
 .modebar {
     display: none;
 }
+/* #endregion */
 
 
