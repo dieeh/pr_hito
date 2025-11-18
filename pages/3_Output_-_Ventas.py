@@ -1,10 +1,13 @@
-import sqlite3
 from datetime import datetime
 
 import pandas as pd
-import plotly.express as px
 import streamlit as st
-from streamlit_extras.stylable_container import stylable_container
+
+from db import get_connection
+
+# import plotly.express as px
+
+# from streamlit_extras.stylable_container import stylable_container
 
 textColor = "#FFFFFF"
 primaryColor = "#6aff67"
@@ -40,18 +43,13 @@ except FileNotFoundError:
 # endregion
 
 
-# from pos import procesar_venta  # módulo que ya construimos
-
-DB_PATH = "./data/inventario.db"
-
-
 # =====================================================
 # Cargar datos base
 # =====================================================
 
 
 def procesar_venta(items, vendedor_id=1, metodo_pago=1):
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_connection()
     conn.execute("PRAGMA foreign_keys = ON;")
     cursor = conn.cursor()
 
@@ -156,29 +154,30 @@ def procesar_venta(items, vendedor_id=1, metodo_pago=1):
         return {"status": "ERROR", "mensaje": str(e)}
 
     finally:
-        conn.close()
+        # conn.close()
+        pass
 
 
 def obtener_productos():
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_connection()
     df = pd.read_sql(
         "SELECT producto_id, nombre, precio_unitario, stock_actual FROM productos", conn
     )
-    conn.close()
+    # conn.close()
     return df
 
 
 def obtener_vendedores():
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_connection()
     df = pd.read_sql("SELECT vendedor_id, nombre FROM vendedores", conn)
-    conn.close()
+    # conn.close()
     return df
 
 
 def obtener_metodos_pago():
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_connection()
     df = pd.read_sql("SELECT metodo_id, nombre FROM metodos_pago", conn)
-    conn.close()
+    # conn.close()
     return df
 
 
@@ -186,7 +185,7 @@ def obtener_metodos_pago():
 # Streamlit UI
 # =====================================================
 # st.set_page_config(page_title="Punto de Venta", layout="wide")
-st.title("🛒 Punto de Venta (POS)")
+st.title("Punto de Venta (POS)")
 
 
 # =======================
@@ -216,7 +215,7 @@ col_v, col_m = st.columns(2)
 
 with col_v:
     vendedor_sel = st.selectbox(
-        "👤 Vendedor:", vendedores["nombre"], key="vendedor_selector"
+        "Vendedor:", vendedores["nombre"], key="vendedor_selector"
     )
     vendedor_id = int(
         vendedores.loc[vendedores["nombre"] == vendedor_sel, "vendedor_id"].iloc[0]
@@ -224,7 +223,7 @@ with col_v:
 
 with col_m:
     metodo_sel = st.selectbox(
-        "💳 Método de pago:", metodos["nombre"], key="metodo_selector"
+        "Método de pago:", metodos["nombre"], key="metodo_selector"
     )
     metodo_id = int(metodos.loc[metodos["nombre"] == metodo_sel, "metodo_id"].iloc[0])
 
@@ -235,13 +234,13 @@ with col_m:
 if "carrito" not in st.session_state:
     st.session_state.carrito = []
 
-st.subheader("🧺 Carrito de compra")
+# st.subheader("🧺 Carrito de compra")
 
 
 # =====================================================
 # Añadir producto
 # =====================================================
-st.subheader("➕ Agregar producto al carrito")
+st.subheader("Agregar producto al carrito")
 
 col1, col2, col3 = st.columns([3, 1, 1])
 
@@ -266,16 +265,16 @@ with col3:
                 "subtotal": cantidad * float(producto["precio_unitario"]),
             }
         )
-        st.success(f"{cantidad} × {producto['nombre']} agregado.")
+        st.toast(f"{cantidad} × {producto['nombre']} agregado.")
 
 
 # =====================================================
 # Mostrar carrito
 # =====================================================
-st.subheader("🛍 Detalle del carrito")
+st.subheader("Detalle del carrito")
 
 if len(st.session_state.carrito) == 0:
-    st.info("El carrito está vacío.")
+    st.success("El carrito está vacío.")
     st.stop()
 
 df_carrito = pd.DataFrame(st.session_state.carrito)
@@ -314,4 +313,4 @@ with col_a:
 with col_b:
     if st.button("🗑 Vaciar carrito"):
         st.session_state.carrito = []
-        st.info("Carrito vaciado.")
+        st.success("Carrito vaciado.")
