@@ -53,8 +53,9 @@
 
 /* #region ventasxcategoria container  */
 .st-key-st-key-ventasxcategoria {
-    background-color: var(--secondaryBackgroundColor);
+    background-color: #1c1c1c;
     border-radius: 1rem;
+    border: solid 1px #2c2c2c;
     /* padding: 1rem 1.5rem 1.5rem 1.5rem; */
     padding: 1.2rem;
     max-height: 300px;
@@ -72,7 +73,7 @@
     top: 6.3rem;
     left: -7rem;
 }
-.st-key-st-key-setso h2 {
+.st-key-st-key-ventasxcategoria h2 {
     color: #0d0d0d;
 }
 
@@ -84,6 +85,38 @@
     font-weight: 600;
 }
 /* #endregion */
+
+.st-key-st-key-globalmetrics {
+    display: flex;
+    justify-content: center;
+    height: 300px !important;
+
+}
+
+[data-testid="stLayoutWrapper"]:has(.st-key-st-key-globalmetrics) {
+    height: 300px;
+}
+
+
+.st-key-st-key-globalmetrics .stElementContainer > .stMetric > div {
+    border-radius: .5rem;
+    background: #1c1c1c;
+    padding: .3rem 1rem;
+    /* display: flex; */
+    /* flex-direction: row-reverse; */
+}
+
+
+.st-key-st-key-globalmetrics .stElementContainer > .stMetric * {
+    color: #ffffff;
+    font-weight: 500;
+}
+.st-key-st-key-globalmetrics p {
+    font-weight: bolder;
+    font-size: 1.05rem;
+}
+
+
 
 /* #region estilos globales de los graficos */
 .main-svg {
