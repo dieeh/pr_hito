@@ -1,7 +1,8 @@
 import sqlite3
 from math import sqrt
+from statistics import NormalDist
 
-import numpy as np
+# import numpy as np
 import pandas as pd
 import plotly.express as px
 import streamlit as st
@@ -90,8 +91,13 @@ def calcular_eoq(mu_D, H, S):
     return EOQ, D_anual
 
 
-def calcular_rop(mu_D, sigma_D, L, z_beta=1.645):
-    R = mu_D * L + z_beta * sigma_D * sqrt(L)
+def z_from_percent(percent):
+    p = percent / 100
+    return NormalDist().inv_cdf(p)
+
+
+def calcular_rop(mu_D, sigma_D, L, SLT=95):
+    R = mu_D * L + z_from_percent(SLT) * sigma_D * sqrt(L)
     return R
 
 
@@ -130,7 +136,7 @@ if df_demand is None:
     st.stop()
 
 mu_D = float(df_demand["cantidad"].mean())
-sigma_D = float(df_demand["cantidad"].std(ddof=0))
+sigma_D = float(df_demand["cantidad"].std(ddof=1))
 
 # ---------------------------------------------------------
 # Parámetros del inventario

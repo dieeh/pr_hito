@@ -51,6 +51,9 @@ CREATE TABLE vendedores (
     contacto TEXT
 );
 
+INSERT INTO vendedores (nombre, contacto) VALUES ('Admin', 'admin');
+
+
 -- =========================
 -- TABLA: Compras
 -- =========================
@@ -117,6 +120,9 @@ CREATE TABLE metodos_pago (
     metodo_id INTEGER PRIMARY KEY AUTOINCREMENT,
     nombre TEXT NOT NULL
 );
+
+INSERT INTO metodos_pago (nombre) VALUES ('Efectivo');
+
 
 -- =========================
 -- TABLA: Movimientos de Inventario
