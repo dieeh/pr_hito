@@ -13,6 +13,7 @@ cursor.execute("PRAGMA foreign_keys = ON;")
 # --- Selección o creación de proveedor ---
 st.subheader("Proveedor")
 
+
 proveedor_id = None
 
 opt_prov = st.radio("Seleccionar proveedor:", ["Existente", "Nuevo"])

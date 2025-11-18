@@ -1,0 +1,11 @@
+﻿nombre,descripcion,categoria_id,precio_unitario,stock_actual,unidad_medida,estado,holding_cost,service_level_target,reorder_point,order_quantity
+Producto A,Descripción de prueba,1,2455.1,48,unid,1,104.51,0.95,0,0
+Producto B,Descripción de prueba,4,2146.4,90,unid,1,131.19,0.95,0,0
+Producto C,Descripción de prueba,5,1699.1,100,unid,1,109.23,0.95,0,0
+Producto D,Descripción de prueba,5,5525.9,51,unid,1,55.33,0.95,0,0
+Producto E,Descripción de prueba,1,1296.2,32,unid,1,68.62,0.95,0,0
+Producto F,Descripción de prueba,2,3420.5,75,unid,1,120.40,0.95,0,0
+Producto G,Descripción de prueba,3,1875.0,60,unid,1,99.80,0.95,0,0
+Producto H,Descripción de prueba,4,720.3,120,unid,1,44.11,0.95,0,0
+Producto I,Descripción de prueba,2,985.7,40,unid,1,57.39,0.95,0,0
+Producto J,Descripción de prueba,1,4500.0,55,unid,1,150.00,0.95,0,0
