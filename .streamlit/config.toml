@@ -3,3 +3,19 @@ gatherUsageStats = false
 
 [global]
 suppressWarning = true
+
+[theme]
+# Puedes usar "light" o "dark" como base
+base = "dark" 
+
+# Color del texto
+textColor = "#FFFFFF" 
+
+# Color principal (usado en botones, sliders, texto en negrita)
+primaryColor = "#6aff67" # Un rojo brillante 
+
+# Color de fondo de la aplicación
+backgroundColor = "#0d0d0d" 
+
+# Color de fondo de la barra lateral y de los contenedores secundarios
+secondaryBackgroundColor = "#1d1d1d"

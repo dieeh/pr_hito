@@ -1,12 +1,114 @@
-.stAppHeader {
-    /* display: none; */
+:root {
+    --textColor: #FFFFFF;
+    --primaryColor: #6aff67;  
+    --backgroundColor: #0d0d0d; 
+    --secondaryBackgroundColor: #1d1d1d;
 }
 
-.stMainBlockContainer {
+*:not([data-testid="stIconMaterial"]) {
+    font-family: "Consolas", sans-serif !important;
+}
+
+/* Contenedor principal */
+.stMainBlockContainer { 
     /* margin: 0; */
-    padding: 2rem 4rem;
+    background: none;
+    padding: .7rem 4rem;
+}
+
+/* #region Navbar estilos */
+[data-baseweb="tab-border"] {
+    display: none;
 }
 
 .st-emotion-cache-scp8yw {
     display: none;
 }
+
+[data-baseweb="tab-highlight"] {
+    display: none;
+}
+/* #endregion */
+
+/* #region Esconder el header por defecto */
+[data-testid="stToolbar"], [data-testid="stHeader"] {
+    background: #00000000;
+    border: solid white;
+    top: -5rem;
+}
+/* #endregion */
+
+/* navbar button */
+[data-testid="stExpandSidebarButton"] {
+    position: relative;
+    top: 10.1rem;
+}
+
+/* Esconder contenedor vacio */
+.stMainBlockContainer > [data-testid="stVerticalBlock"] >[data-testid="stElementContainer"] {
+    display: none;
+}
+
+
+.st-key-st-key-setso {
+    background-color: var(--secondaryBackgroundColor);
+    border-radius: 1rem;
+    /* padding: 1rem 1.5rem 1.5rem 1.5rem; */
+    padding: 1.2rem;
+    max-height: 300px;
+    max-width: 320px;
+    display: flex;
+    flex-direction: row;
+    
+}
+.st-key-st-key-setso .stText {
+    font-size: 1.4rem;
+    transform: rotate(-90deg);
+    -ms-transform: rotate(-90deg);
+    width: 270px;
+    position: relative;
+    top: 6.3rem;
+    left: -7rem;
+}
+.st-key-st-key-setso h2 {
+    color: #0d0d0d;
+}
+
+/* indentificador de grafigos */
+.marks {
+    background: transparent !important;
+}
+.marks text {
+    color: #0d0d0d !important;
+    fill: #000 !important;
+    font-size: .8rem;
+    font-weight: bold;
+}
+
+.st-key-st-key-setso div:has(.stText){
+    width: 40px !important;
+
+
+}
+
+.main-svg {
+    /* top: -10rem; */
+    bottom: 0;
+    right: 0;
+    left: 0;
+    background: transparent !important;
+}
+
+.stFullScreenFrame, .plotly {
+    height: 300px;
+    /* top: -50px; */
+}
+.svg-container {
+    top: -35px !important;
+    /* left: -50px !important; */
+}
+.modebar {
+    display: none;
+}
+
+
