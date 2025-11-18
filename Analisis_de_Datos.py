@@ -73,51 +73,90 @@ with tab1:
         pass
 
     with col3:
-        column1, column2 = st.columns(2)
-        with column1:
-            st.metric(label="costo", value=50)
-            st.metric(label="costo", value=50)
-        with column2:
-            st.metric(label="costo", value=50)
-            st.metric(label="costo", value=50)
-        pass
+        with stylable_container(key="globalmetrics", css_styles=""):
+            column1, column2 = st.columns(2)
+            with column1:
+                st.metric(label="costo", value=50)
+                st.metric(label="costo", value=50)
+            with column2:
+                st.metric(label="costo", value=50)
+                st.metric(label="costo", value=50)
+            st.metric(label="Valor Total", value=200)
+            pass
 
-    data1 = {
-        'Categoría': ['A', 'B', 'C', 'D', 'E'],
-        'Valor': [25, 40, 15, 30, 55]
-    }
-    df1 = pd.DataFrame(data1)
+    col11, col12 = st.columns([2,1])
+    with col11:
+        data1 = {
+            'Categoría': ['A', 'B', 'C', 'D', 'E'],
+            'Valor': [25, 40, 15, 30, 55]
+        }
+        df1 = pd.DataFrame(data1)
 
-    # 2. Crear el gráfico de barras con Plotly Express
-    # Plotly Express facilita la creación de gráficos comunes
-    fig1 = px.bar(
-        df1, 
-        x='Categoría', 
-        y='Valor', 
-        title='Gráfico de Barras Simple con Plotly',
-        labels={'Categoría': 'Clasificación', 'Valor': 'Magnitud'},
-        color_discrete_sequence=['#d3d3d3', '#767676', '#4f4f4f', '#6aff67','#ffffff'],  # Opcional: para colorear por categoría
-        color="Categoría"
-    )
+        # 2. Crear el gráfico de barras con Plotly Express
+        # Plotly Express facilita la creación de gráficos comunes
+        fig1 = px.bar(
+            df1, 
+            x='Categoría', 
+            y='Valor', 
+            labels={'Categoría': 'Clasificación', 'Valor': 'Magnitud'},
+            color_discrete_sequence=['#d3d3d3', '#767676', '#4f4f4f', '#6aff67','#ffffff'],  # Opcional: para colorear por categoría
+            color="Categoría"
+        )
 
-    # Opcional: Personalización adicional (e.g., actualizar el diseño)
-    fig1.update_layout(
-        xaxis_title='Categoría de Datos',
-        yaxis_title='Valor Correspondiente',
-        font=dict(
-            size=14,
-            color="White"
-        ),
-        # Ajustar el ancho de las barras (0.8 es el valor por defecto)
-        bargap=0,
-        showlegend=False
-    )
+        # Opcional: Personalización adicional (e.g., actualizar el diseño)
+        fig1.update_layout(
+            xaxis_title='Categoría de Datos',
+            yaxis_title='Valor Correspondiente',
+            font=dict(
+                size=14,
+                color="White"
+            ),
+            # Ajustar el ancho de las barras (0.8 es el valor por defecto)
+            bargap=0,
+            showlegend=False
+        )
 
 
-    # 3. Mostrar el gráfico en Streamlit
-    st.title("📈 Demostración de Plotly y Streamlit")
-    st.write("Este es un gráfico de barras interactivo generado con `plotly.express` y mostrado con `st.plotly_chart`.")
-    st.plotly_chart(fig1, use_container_width=True)
+        # 3. Mostrar el gráfico en Streamlit
+        st.plotly_chart(fig1, use_container_width=True)
+    
+    with stylable_container(key="dataTable", css_styles=""):
+        st.title("Tabla Interactiva con Opciones de Filtrado 🔎")
 
+        # 1. Crear un DataFrame de ejemplo
+        data = {
+            'Producto': ['Aspiradora', 'Licuadora', 'Tostadora', 'Cafetera', 'Microondas', 'Horno', 'Nevera', 'Lavadora'],
+            'Precio ($)': [150.99, 45.50, 25.00, 75.75, 200.00, 350.50, 800.00, 550.00],
+            'Stock': [100, 50, 150, 75, 30, 10, 5, 20],
+            'Fecha_Lanzamiento': pd.to_datetime(['2023-01-15', '2023-03-20', '2024-05-10', '2022-11-01', '2024-02-28', '2023-08-12', '2022-09-01', '2024-01-01'])
+        }
+
+        df = pd.DataFrame(data)
+
+        # 2. Mostrar la tabla con st.dataframe()
+        st.subheader("Tabla de Inventario (Solo Visualización)")
+        st.write("Usa el campo de **búsqueda** y haz clic en los **encabezados de las columnas** para ordenar.")
+
+        st.dataframe(
+            df,
+            use_container_width=True, # Hace que la tabla ocupe todo el ancho
+            # Opciones de Filtrado/Búsqueda incluidas por defecto:
+            # - Campo de búsqueda global (arriba a la derecha).
+            # - Iconos de ordenamiento en los encabezados.
+        )
+
+        # st.data_editor() para Edición y Filtrado
+
+
+        st.subheader("Tabla Editable con Opciones de Filtrado")
+
+        edited_df = st.data_editor(
+            df,
+            use_container_width=True,
+            num_rows="dynamic" # Permite al usuario añadir o eliminar filas
+        )
+
+        st.write("Fila(s) y valor(es) editados por el usuario:")
+        st.dataframe(edited_df)
 with tab2:
     st.header('diego Weko')
