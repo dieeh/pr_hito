@@ -2,6 +2,7 @@ import streamlit as st
 from streamlit_extras.stylable_container import stylable_container
 import plotly.express as px
 import pandas as pd
+from numpy.random import default_rng as rng
 
 
 
@@ -119,6 +120,24 @@ with tab1:
 
         # 3. Mostrar el gráfico en Streamlit
         st.plotly_chart(fig1, use_container_width=True)
+    with col12:
+        with stylable_container(key="WrapperDemandaProductos", css_styles=''):
+            st.text("Productos mas demandados")
+            with stylable_container(key="demandaProductos", css_styles=''):
+                changes = list(rng(4).standard_normal(20))
+                data = [sum(changes[:i]) for i in range(20)]
+                delta = round(data[-1], 2)
+
+                st.metric(
+                    "Line", 10, delta, chart_data=data, chart_type="line", border=True
+                )
+                st.metric(
+                    "Area", 10, delta, chart_data=data, chart_type="area", border=True
+                )
+                st.metric(
+                    "Bar", 10, delta, chart_data=data, chart_type="bar", border=True
+                )
+
     
     with stylable_container(key="dataTable", css_styles=""):
         st.title("Tabla Interactiva con Opciones de Filtrado 🔎")
