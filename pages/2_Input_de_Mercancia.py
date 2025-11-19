@@ -1,9 +1,11 @@
-import sqlite3
-
 import pandas as pd
-import plotly.express as px
 import streamlit as st
-from streamlit_extras.stylable_container import stylable_container
+
+from db import get_connection
+
+# import plotly.express as px
+
+# from streamlit_extras.stylable_container import stylable_container
 
 textColor = "#FFFFFF"
 primaryColor = "#6aff67"
@@ -41,7 +43,7 @@ except FileNotFoundError:
 
 tab1, tab2 = st.tabs(["Ingreso por CSV", "Ingreso manual"])  # NOTE MENU DE NAVEGACION
 
-conn = sqlite3.connect("./data/inventario.db")
+conn = get_connection()
 cursor = conn.cursor()
 cursor.execute("PRAGMA foreign_keys = ON;")
 
@@ -120,7 +122,7 @@ with tab1:
 
     if uploaded_file is not None:
         df = pd.read_csv(uploaded_file)
-        st.write("Vista previa del CSV original:")
+        st.subheader("Vista previa del CSV original:")
         st.dataframe(df.head(10))
 
         # Columnas de la tabla productos (excepto producto_id)
@@ -212,7 +214,7 @@ with tab1:
                 )
 
             conn.commit()
-            conn.close()
+            # conn.close()
             st.success(
                 f"Productos insertados correctamente con compra ID {compra_id} registrada."
             )
@@ -289,7 +291,7 @@ with tab2:
     #   3. Productos dinámicos con buen UI
     # ============================================================
 
-    st.header("Productos de la compra")
+    st.subheader("Productos de la compra")
 
     tabla_cols = [
         "nombre",
@@ -359,7 +361,7 @@ with tab2:
         preview_df = pd.DataFrame(st.session_state.productos)
         st.dataframe(preview_df, use_container_width=True)
     else:
-        st.info("Aún no has agregado productos.")
+        st.success("Aún no has agregado productos.")
 
     # ============================================================
     #   4. Guardar compra
@@ -410,4 +412,4 @@ with tab2:
 
         conn.commit()
         st.success(f"Compra registrada correctamente (ID {compra_id}).")
-        st.balloons()
+        # st.balloons()
