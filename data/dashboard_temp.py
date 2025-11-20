@@ -1,4 +1,4 @@
-import sqlite3
+# import sqlite3
 from math import sqrt
 from statistics import NormalDist
 
@@ -6,6 +6,8 @@ from statistics import NormalDist
 import pandas as pd
 import plotly.express as px
 import streamlit as st
+
+from db import get_connection
 
 DB_PATH = "inventario.db"
 
@@ -15,14 +17,13 @@ DB_PATH = "inventario.db"
 
 
 def obtener_productos():
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_connection()
     df = pd.read_sql("SELECT producto_id, nombre FROM productos", conn)
-    conn.close()
     return df
 
 
 def obtener_demanda_diaria(producto_id):
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_connection()
     query = """
         SELECT v.fecha, dv.cantidad
         FROM detalle_ventas dv
@@ -31,7 +32,6 @@ def obtener_demanda_diaria(producto_id):
         ORDER BY v.fecha;
     """
     df = pd.read_sql(query, conn, params=[producto_id])
-    conn.close()
 
     if df.empty:
         return None
@@ -53,7 +53,7 @@ def obtener_demanda_diaria(producto_id):
 
 
 def obtener_parametros_inventario(producto_id):
-    conn = sqlite3.connect(DB_PATH)
+    conn = get_connection()
     query = """
         SELECT
             p.holding_cost AS H,
@@ -67,7 +67,6 @@ def obtener_parametros_inventario(producto_id):
         LIMIT 1;
     """
     df = pd.read_sql(query, conn, params=[producto_id])
-    conn.close()
 
     if df.empty:
         return None
