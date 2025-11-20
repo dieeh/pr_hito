@@ -77,12 +77,12 @@ with tab1:
         with stylable_container(key="globalmetrics", css_styles=""):
             column1, column2 = st.columns(2)
             with column1:
-                st.metric(label="costo", value=50)
-                st.metric(label="costo", value=50)
+                st.metric(label="Stock Total", value=567)
+                st.metric(label="Poco Stock", value=34)
             with column2:
-                st.metric(label="costo", value=50)
-                st.metric(label="costo", value=50)
-            st.metric(label="Valor Total", value=200)
+                st.metric(label="Mermas", value=12)
+                st.metric(label="Fuera de Stock", value=67)
+            st.metric(label="Valor Total del Inventario", value=2000000)
             pass
 
     col11, col12 = st.columns([2,1])
@@ -178,4 +178,4 @@ with tab1:
         st.write("Fila(s) y valor(es) editados por el usuario:")
         st.dataframe(edited_df)
 with tab2:
-    st.header('diego Weko')
+    pass

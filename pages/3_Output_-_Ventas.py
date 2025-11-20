@@ -185,7 +185,8 @@ def obtener_metodos_pago():
 # Streamlit UI
 # =====================================================
 # st.set_page_config(page_title="Punto de Venta", layout="wide")
-st.title("Punto de Venta (POS)")
+with st.container():
+    st.title("Punto de Venta (POS)")
 
 
 # =======================
@@ -271,46 +272,48 @@ with col3:
 # =====================================================
 # Mostrar carrito
 # =====================================================
-st.subheader("Detalle del carrito")
+with st.container():
 
-if len(st.session_state.carrito) == 0:
-    st.success("El carrito está vacío.")
-    st.stop()
+    st.subheader("Detalle del carrito")
 
-df_carrito = pd.DataFrame(st.session_state.carrito)
-total = df_carrito["subtotal"].sum()
+    if len(st.session_state.carrito) == 0:
+        st.success("El carrito está vacío.")
+        st.stop()
 
-st.table(df_carrito)
+    df_carrito = pd.DataFrame(st.session_state.carrito)
+    total = df_carrito["subtotal"].sum()
 
-st.metric("TOTAL A PAGAR", f"${total:,.0f}")
+    st.table(df_carrito)
+
+    st.metric("TOTAL A PAGAR", f"${total:,.0f}")
 
 
-# =====================================================
-# Botones
-# =====================================================
-col_a, col_b = st.columns(2)
+    # =====================================================
+    # Botones
+    # =====================================================
+    col_a, col_b = st.columns(2)
 
-with col_a:
-    if st.button("💳 Registrar Venta"):
-        items = [
-            {"producto_id": row["producto_id"], "cantidad": int(row["cantidad"])}
-            for _, row in df_carrito.iterrows()
-        ]
+    with col_a:
+        if st.button("💳 Registrar Venta"):
+            items = [
+                {"producto_id": row["producto_id"], "cantidad": int(row["cantidad"])}
+                for _, row in df_carrito.iterrows()
+            ]
 
-        resultado = procesar_venta(items, vendedor_id, metodo_id)
+            resultado = procesar_venta(items, vendedor_id, metodo_id)
 
-        if resultado["status"] == "OK":
-            st.success(
-                f"Venta registrada correctamente ✔\n"
-                f"ID de venta: {resultado['venta_id']}\n"
-                f"Total: ${resultado['total']:,.0f}"
-            )
+            if resultado["status"] == "OK":
+                st.success(
+                    f"Venta registrada correctamente ✔\n"
+                    f"ID de venta: {resultado['venta_id']}\n"
+                    f"Total: ${resultado['total']:,.0f}"
+                )
+                st.session_state.carrito = []
+            else:
+                st.error(f"❌ Error: {resultado['mensaje']}")
+
+
+    with col_b:
+        if st.button("🗑 Vaciar carrito"):
             st.session_state.carrito = []
-        else:
-            st.error(f"❌ Error: {resultado['mensaje']}")
-
-
-with col_b:
-    if st.button("🗑 Vaciar carrito"):
-        st.session_state.carrito = []
-        st.success("Carrito vaciado.")
+            st.success("Carrito vaciado.")
