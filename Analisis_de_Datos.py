@@ -210,6 +210,7 @@ def obtener_parametros_inventario(producto_id):
         WHERE p.producto_id = ?
         LIMIT 1;
     """
+
     df = pd.read_sql(query, conn, params=[producto_id])
 
     if df.empty:
@@ -217,14 +218,22 @@ def obtener_parametros_inventario(producto_id):
 
     H, S, L = df.loc[0, ["H", "S", "L"]]
 
-    if H is None or S is None or L is None:
+    # Validación directa
+    if any(x is None for x in [H, S, L]):
         return None
 
     return float(H), float(S), float(L)
 
 
 def calcular_eoq(mu_D, H, S):
-    D_anual = mu_D * 365
+    if mu_D <= 0:
+        return None, None
+
+    D_anual = mu_D * 365  # demanda diaria → anual
+
+    if H <= 0 or S <= 0:
+        return None, D_anual
+
     EOQ = sqrt((2 * D_anual * S) / H)
     return EOQ, D_anual
 
@@ -235,15 +244,229 @@ def z_from_percent(percent):
 
 
 def calcular_rop(mu_D, sigma_D, L, SLT=95):
-    R = mu_D * L + z_from_percent(SLT) * sigma_D * sqrt(L)
+    if mu_D is None or L is None:
+        return None
+
+    if sigma_D is None:
+        sigma_D = 0  # sin variabilidad
+
+    z = z_from_percent(SLT)
+
+    R = mu_D * L + z * sigma_D * sqrt(L)
     return R
+
+
+def reporte_mas_demandados():
+    conn = get_connection()
+
+    query = """
+        SELECT p.nombre,
+               dv.producto_id,
+               SUM(dv.cantidad) AS total_vendido
+        FROM detalle_ventas dv
+        INNER JOIN productos p ON p.producto_id = dv.producto_id
+        GROUP BY dv.producto_id
+        ORDER BY total_vendido DESC;
+    """
+
+    df = pd.read_sql(query, conn)
+
+    st.subheader("📈 Productos Más Demandados")
+    st.dataframe(df)
+
+    st.write("### Indicadores por producto")
+    for _, row in df.iterrows():
+        st.metric(
+            label=row["nombre"],
+            value=f"{int(row['total_vendido'])} uds",
+            delta="Demanda total",
+        )
+
+
+def generar_reporte_stock_y_rop():
+    conn = get_connection()
+
+    productos = pd.read_sql(
+        "SELECT producto_id, nombre, stock_actual FROM productos", conn
+    )
+    resultados = []
+
+    for _, row in productos.iterrows():
+        pid = row["producto_id"]
+        nombre = row["nombre"]
+        stock = row["stock_actual"]
+
+        # Demanda histórica
+        q = """
+            SELECT cantidad
+            FROM detalle_ventas
+            WHERE producto_id = ?
+        """
+        d = pd.read_sql(q, conn, params=[pid])
+
+        if d.empty:
+            mu_D = 0
+            sigma_D = 0
+        else:
+            mu_D = d["cantidad"].mean()
+            sigma_D = d["cantidad"].std(ddof=1)
+            if pd.isna(sigma_D):
+                sigma_D = 0
+
+        # Parámetros del inventario
+        params = obtener_parametros_inventario(pid)
+        if params:
+            H, S, L = params
+        else:
+            H = S = L = None
+
+        # Cálculo EOQ
+        if H and S:
+            eoq, _ = calcular_eoq(mu_D, H, S)
+        else:
+            eoq = None
+
+        # Cálculo ROP
+        rop = calcular_rop(mu_D, sigma_D, L) if L else None
+
+        # Estado operativo
+        if rop and stock <= rop:
+            estado = "⚠️ Reposición urgente"
+        elif rop and stock <= rop * 1.2:
+            estado = "🔸 Cerca del ROP"
+        else:
+            estado = "✔ Stock OK"
+
+        resultados.append(
+            {
+                "Producto": nombre,
+                "Stock": stock,
+                "Demanda diaria (μ)": round(mu_D, 2),
+                "σ demanda": round(sigma_D, 2) if sigma_D else 0,
+                "Lead Time": L,
+                "ROP": round(rop, 2) if rop else None,
+                "EOQ": round(eoq, 2) if eoq else None,
+                "Estado": estado,
+            }
+        )
+
+    return pd.DataFrame(resultados)
+
+
+def reporte_stock_rop():
+    st.subheader("📦 Niveles de Stock y Punto de Reorden")
+
+    df = generar_reporte_stock_y_rop()
+    st.dataframe(df)
+
+    st.write("### Indicadores rápidos")
+    for _, row in df.iterrows():
+        st.metric(
+            label=row["Producto"],
+            value=f"Stock {row['Stock']}",
+            delta=f"ROP {row['ROP']}",
+        )
+
+
+def reporte_rentabilidad():
+    st.subheader("📈 Rentabilidad por Producto")
+    conn = get_connection()
+
+    # Traer ventas y compras
+    ventas = pd.read_sql(
+        """
+        SELECT dv.producto_id,
+               dv.cantidad,
+               dv.precio_unitario AS precio_venta,
+               v.fecha AS fecha_venta
+        FROM detalle_ventas dv
+        JOIN ventas v ON v.venta_id = dv.venta_id
+    """,
+        conn,
+    )
+
+    compras = pd.read_sql(
+        """
+        SELECT dc.producto_id,
+               dc.cantidad,
+               dc.precio_unitario AS precio_costo,
+               c.fecha AS fecha_compra
+        FROM detalle_compras dc
+        JOIN compras c ON c.compra_id = dc.compra_id
+    """,
+        conn,
+    )
+
+    if ventas.empty:
+        st.warning("No hay ventas registradas.")
+        return
+
+    # Función para calcular costo ponderado histórico de un producto hasta la fecha de venta
+    def costo_ponderado(producto_id, fecha_venta):
+        df = compras[
+            (compras["producto_id"] == producto_id)
+            & (compras["fecha_compra"] <= fecha_venta)
+        ]
+        if df.empty:
+            return 0
+        total_cantidad = df["cantidad"].sum()
+        if total_cantidad == 0:
+            return 0
+        return (df["cantidad"] * df["precio_costo"]).sum() / total_cantidad
+
+    # Aplicar costo ponderado a cada venta
+    ventas["costo_unitario"] = ventas.apply(
+        lambda row: costo_ponderado(row["producto_id"], row["fecha_venta"]), axis=1
+    )
+
+    # Calcular margen unitario y total
+    ventas["margen_unitario"] = ventas["precio_venta"] - ventas["costo_unitario"]
+    ventas["margen_total"] = ventas["margen_unitario"] * ventas["cantidad"]
+
+    # Agrupar por producto
+    resumen = (
+        ventas.groupby("producto_id")
+        .agg(
+            uds_vendidas=pd.NamedAgg(column="cantidad", aggfunc="sum"),
+            ingresos=pd.NamedAgg(
+                column="precio_venta",
+                aggfunc=lambda x: (x * ventas.loc[x.index, "cantidad"]).sum(),
+            ),
+            margen_total=pd.NamedAgg(column="margen_total", aggfunc="sum"),
+            margen_unitario=pd.NamedAgg(column="margen_unitario", aggfunc="mean"),
+        )
+        .reset_index()
+    )
+
+    # Traer nombres de productos y unir
+    productos_df = pd.read_sql("SELECT producto_id, nombre FROM productos", conn)
+    resumen = resumen.merge(productos_df, on="producto_id", how="left")
+    resumen = resumen.sort_values("margen_total", ascending=False)
+
+    # Mostrar tabla
+    st.dataframe(resumen)
+
+    # Mini métricas TOP 5
+    top5 = resumen.nlargest(5, "margen_total")
+    for _, row in top5.iterrows():
+        st.metric(
+            label=f"{row['nombre']} (Uds: {int(row['uds_vendidas'])})",
+            value=f"${row['margen_total']:,.0f}",
+            delta=f"MU: ${row['margen_unitario']:,.2f}",
+        )
+
+    # Gráfico comparativo TOP 5
+    st.subheader("Contribución relativa al margen total (TOP 5)")
+    fig = px.pie(top5, values="margen_total", names="nombre", title="TOP 5 Productos")
+    st.plotly_chart(fig, use_container_width=True)
 
 
 with tab1:
     col1, col2, col3 = st.columns(3)
 
     with col1:
-        st.title("Hola, Nombre Apellido")
+        # st.title("Hola, Nombre Apellido")
+        st.title("Hola")
         st.text("Hoy es Lunes, 17 del noviembre de 2025")
     with col2:
         with stylable_container(key="ventasxcategoria", css_styles=""):
@@ -380,84 +603,22 @@ with tab1:
         pass
 
 with tab2:
-    st.title("Reporte de Inventario")
-    productos = obtener_productos()
+    st.title("Reportes del Sistema")
 
-    if productos.empty:
-        st.error("No hay productos en la base de datos.")
-        st.stop()
-
-    producto_seleccionado = st.selectbox(
-        "Selecciona un producto:",
-        productos["nombre"],
+    opcion = st.selectbox(
+        "Selecciona un reporte",
+        [
+            "Productos más demandados",
+            "Stock y Punto de Reorden",
+            "Rentabilidad por producto",
+        ],
     )
 
-    producto_id = int(
-        productos.loc[productos["nombre"] == producto_seleccionado, "producto_id"].iloc[
-            0
-        ]
-    )
+    if opcion == "Productos más demandados":
+        reporte_mas_demandados()
 
-    st.subheader(f"Analizando: **{producto_seleccionado}**")
+    elif opcion == "Stock y Punto de Reorden":
+        reporte_stock_rop()
 
-    df_demand = obtener_demanda_diaria(producto_id)
-
-    if df_demand is None:
-        st.warning("Este producto no tiene historial de ventas.")
-        st.stop()
-
-    mu_D = float(df_demand["cantidad"].mean())
-    sigma_D = float(df_demand["cantidad"].std(ddof=1))
-
-    params = obtener_parametros_inventario(producto_id)
-    if params is None:
-        st.error("Este producto no tiene parámetros H, S o L definidos.")
-        st.stop()
-
-    H, S, L = params
-
-    EOQ, D_anual = calcular_eoq(mu_D, H, S)
-    ROP = calcular_rop(mu_D, sigma_D, L)
-
-    left, mid, right = st.columns(3)
-
-    with left:
-        st.metric("Demanda diaria media", f"{mu_D:.2f} unid/día")
-        st.metric("Desviación estándar", f"{sigma_D:.2f}")
-
-    with mid:
-        st.metric("Lead Time (L)", f"{L} días")
-        st.metric("Demanda anual (estimada)", f"{D_anual:.0f} unidades")
-
-    with right:
-        st.metric("EOQ óptimo", f"{EOQ:.0f} unidades")
-        st.metric("Punto de reorden (ROP)", f"{ROP:.0f} unidades")
-
-    st.subheader("Distribución de Demanda Diaria")
-
-    fig_hist = px.histogram(
-        df_demand,
-        x="cantidad",
-        nbins=20,
-        title="Histograma de demanda diaria",
-        labels={"cantidad": "Unidades vendidas por día"},
-        opacity=0.75,
-    )
-
-    st.plotly_chart(fig_hist, use_container_width=True)
-
-    st.subheader("Serie temporal de ventas diarias")
-
-    fig_ts = px.line(
-        df_demand,
-        x="fecha",
-        y="cantidad",
-        title="Evolución de la demanda en el tiempo",
-        markers=True,
-    )
-
-    st.plotly_chart(fig_ts, use_container_width=True)
-
-    st.subheader("Datos de demanda (crudo)")
-
-    st.dataframe(df_demand, height=300)
+    elif opcion == "Rentabilidad por producto":
+        reporte_rentabilidad()

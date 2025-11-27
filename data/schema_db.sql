@@ -160,7 +160,7 @@ CREATE TABLE movimientos_caja (
 CREATE TABLE usuarios (
     usuario_id INTEGER PRIMARY KEY AUTOINCREMENT,
     vendedor_id INTEGER,
-    rut VARCHAR(15) NOT NULL UNIQUE;
+    rut VARCHAR(15) NOT NULL UNIQUE,
     username TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
     rol TEXT CHECK(rol IN ('admin','vendedor','supervisor','consulta')) DEFAULT 'vendedor',

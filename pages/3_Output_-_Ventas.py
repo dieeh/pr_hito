@@ -161,7 +161,8 @@ def procesar_venta(items, vendedor_id=1, metodo_pago=1):
 def obtener_productos():
     conn = get_connection()
     df = pd.read_sql(
-        "SELECT producto_id, nombre, precio_unitario, stock_actual FROM productos", conn
+        "SELECT producto_id, nombre, sku, precio_unitario, stock_actual FROM productos",
+        conn,
     )
     # conn.close()
     return df
@@ -195,6 +196,11 @@ with st.container():
 productos = obtener_productos()
 vendedores = obtener_vendedores()
 metodos = obtener_metodos_pago()
+
+productos["mostrar"] = productos.apply(
+    lambda row: f"{row['sku']} - {row['nombre']}", axis=1
+)
+
 
 if productos.empty:
     st.error("❌ No hay productos cargados en la base de datos.")
@@ -246,9 +252,11 @@ st.subheader("Agregar producto al carrito")
 col1, col2, col3 = st.columns([3, 1, 1])
 
 with col1:
-    prod_sel = st.selectbox("Producto", productos["nombre"])
+    prod_sel = st.selectbox("Producto", productos["mostrar"])
 
-producto = productos.loc[productos["nombre"] == prod_sel].iloc[0]
+
+producto = productos.loc[productos["mostrar"] == prod_sel].iloc[0]
+
 
 with col2:
     cantidad = st.number_input(
@@ -273,7 +281,6 @@ with col3:
 # Mostrar carrito
 # =====================================================
 with st.container():
-
     st.subheader("Detalle del carrito")
 
     if len(st.session_state.carrito) == 0:
@@ -286,7 +293,6 @@ with st.container():
     st.table(df_carrito)
 
     st.metric("TOTAL A PAGAR", f"${total:,.0f}")
-
 
     # =====================================================
     # Botones
@@ -311,7 +317,6 @@ with st.container():
                 st.session_state.carrito = []
             else:
                 st.error(f"❌ Error: {resultado['mensaje']}")
-
 
     with col_b:
         if st.button("🗑 Vaciar carrito"):

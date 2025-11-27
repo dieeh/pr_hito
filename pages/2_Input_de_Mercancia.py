@@ -391,6 +391,14 @@ with tab2:
                                 st.error("El SKU no puede estar vacío.")
                             else:
                                 producto[col] = val
+                        elif col == "estado":
+                            val = st.number_input(
+                                col, min_value=0, value=1, step=1, key=f"{col}_{i}"
+                            )
+                            if val == 0:
+                                producto[col] = val
+                            else:
+                                producto[col] = 1
                         else:
                             producto[col] = st.text_input(
                                 col, value=producto[col], key=f"{col}_{i}"
