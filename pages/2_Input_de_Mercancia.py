@@ -15,7 +15,6 @@ secondaryBackgroundColor = "#1d1d1d"
 
 st.set_page_config(
     page_title="Mi App de Análisis de Datos",
-    page_icon="📈",  # Un emoji o ruta a un archivo .ico
     layout="wide",  # Usa todo el ancho de la pantalla (otras opciones: 'centered')
     initial_sidebar_state="expanded",  # Muestra u oculta la barra lateral al inicio
     menu_items={
@@ -39,6 +38,36 @@ except FileNotFoundError:
         "Archivo style.css no encontrado. Crea un archivo en la raíz del proyecto."
     )
 # endregion
+
+
+def validar_rut(rut: str) -> bool:
+    rut = rut.replace(".", "").replace("-", "").upper()
+
+    if len(rut) < 2:
+        return False
+
+    cuerpo, dv = rut[:-1], rut[-1]
+
+    if not cuerpo.isdigit():
+        return False
+
+    total = 0
+    factor = 2
+
+    for d in reversed(cuerpo):
+        total += int(d) * factor
+        factor = 2 if factor == 7 else factor + 1
+
+    resto = 11 - (total % 11)
+
+    if resto == 11:
+        dv_correcto = "0"
+    elif resto == 10:
+        dv_correcto = "K"
+    else:
+        dv_correcto = str(resto)
+
+    return dv == dv_correcto
 
 
 tab1, tab2 = st.tabs(["Ingreso por CSV", "Ingreso manual"])  # NOTE MENU DE NAVEGACION
@@ -65,16 +94,18 @@ with tab1:
 
         if opt_prov == "Existente":
             proveedores = cursor.execute(
-                "SELECT proveedor_id, nombre FROM proveedores"
+                "SELECT proveedor_id, rut, nombre FROM proveedores"
             ).fetchall()
 
-            dict_prov = {p[1]: p[0] for p in proveedores}
+            # Mostrar Nombre - RUT
+            dict_prov = {f"{p[1]} - {p[2]}": p[0] for p in proveedores}
 
             prov_sel = st.selectbox("Proveedor existente:", list(dict_prov.keys()))
             proveedor_id = dict_prov[prov_sel]
 
         else:
             nuevo_nombre = st.text_input("Nombre proveedor nuevo:")
+            nuevo_rut = st.text_input("RUT:")
             nuevo_contacto = st.text_input("Contacto:")
             nuevo_tel = st.text_input("Teléfono:")
             nueva_dir = st.text_input("Dirección:")
@@ -82,19 +113,27 @@ with tab1:
             if st.button("Guardar proveedor nuevo"):
                 if nuevo_nombre.strip() == "":
                     st.error("El nombre no puede estar vacío.")
+                elif not validar_rut(nuevo_rut):
+                    st.error("El RUT no es válido.")
                 else:
                     cursor.execute(
                         """
-                        INSERT INTO proveedores (nombre, contacto, telefono, direccion)
-                        VALUES (?, ?, ?, ?)
+                        INSERT INTO proveedores (rut, nombre, contacto, telefono, direccion)
+                        VALUES (?, ?, ?, ?, ?)
                     """,
-                        (nuevo_nombre.strip(), nuevo_contacto, nuevo_tel, nueva_dir),
+                        (
+                            nuevo_rut.strip(),
+                            nuevo_nombre.strip(),
+                            nuevo_contacto,
+                            nuevo_tel,
+                            nueva_dir,
+                        ),
                     )
                     conn.commit()
 
                     proveedor_id = cursor.execute(
-                        "SELECT proveedor_id FROM proveedores WHERE nombre = ? ORDER BY proveedor_id DESC LIMIT 1",
-                        (nuevo_nombre.strip(),),
+                        "SELECT proveedor_id FROM proveedores WHERE rut = ? ORDER BY proveedor_id DESC LIMIT 1",
+                        (nuevo_rut.strip(),),
                     ).fetchone()[0]
 
                     st.success("Proveedor agregado.")
@@ -128,6 +167,7 @@ with tab1:
         # Columnas de la tabla productos (excepto producto_id)
         tabla_cols = [
             "nombre",
+            "sku",
             "descripcion",
             "categoria_id",
             "precio_unitario",
@@ -136,8 +176,6 @@ with tab1:
             "estado",
             "holding_cost",
             "service_level_target",
-            "reorder_point",
-            "order_quantity",
         ]
 
         st.markdown(
@@ -226,7 +264,7 @@ with tab2:
 
     with colA:
         opt_prov2 = st.radio(
-            label="Seleccionar proveedor:", options=["Existente", "Nuevo"], key=2
+            label="Seleccionar proveedor:", options=["Existente", "Nuevo"]
         )
 
     with colB:
@@ -234,18 +272,22 @@ with tab2:
 
         if opt_prov2 == "Existente":
             proveedores = cursor.execute(
-                "SELECT proveedor_id, nombre FROM proveedores ORDER BY nombre"
+                "SELECT proveedor_id, rut, nombre FROM proveedores"
             ).fetchall()
 
-            dict_prov = {p[1]: p[0] for p in proveedores}
+            # Mostrar Nombre - RUT
+            dict_prov = {f"{p[1]} - {p[2]}": p[0] for p in proveedores}
 
-            prov_sel = st.selectbox("Proveedor existente:", list(dict_prov.keys()))
+            prov_sel = st.selectbox(
+                "Proveedor existente:", list(dict_prov.keys()), key=7
+            )
             proveedor_id = dict_prov[prov_sel]
 
         else:
             st.subheader("Agregar proveedor nuevo")
 
             nuevo_nombre = st.text_input("Nombre proveedor:")
+            nuevo_rut = st.text_input("RUT:")
             nuevo_contacto = st.text_input("Contacto:")
             nuevo_tel = st.text_input("Teléfono:")
             nueva_dir = st.text_input("Dirección:")
@@ -256,10 +298,10 @@ with tab2:
                 else:
                     cursor.execute(
                         """
-                        INSERT INTO proveedores (nombre, contacto, telefono, direccion)
-                        VALUES (?, ?, ?, ?)
+                        INSERT INTO proveedores (nombre, rut, contacto, telefono, direccion)
+                        VALUES (?, ?, ?, ?, ?)
                         """,
-                        (nuevo_nombre, nuevo_contacto, nuevo_tel, nueva_dir),
+                        (nuevo_nombre, nuevo_rut, nuevo_contacto, nuevo_tel, nueva_dir),
                     )
                     conn.commit()
 
@@ -295,6 +337,7 @@ with tab2:
 
     tabla_cols = [
         "nombre",
+        "sku",
         "descripcion",
         "categoria_id",
         "precio_unitario",
@@ -303,8 +346,6 @@ with tab2:
         "estado",
         "holding_cost",
         "service_level_target",
-        "reorder_point",
-        "order_quantity",
     ]
 
     # Estado persistente
@@ -327,8 +368,6 @@ with tab2:
                     if col in [
                         "categoria_id",
                         "stock_actual",
-                        "reorder_point",
-                        "order_quantity",
                     ]:
                         producto[col] = st.number_input(
                             col, min_value=0, step=1, key=f"{col}_{i}"
@@ -342,9 +381,20 @@ with tab2:
                             col, min_value=0.0, step=0.1, key=f"{col}_{i}"
                         )
                     else:
-                        producto[col] = st.text_input(
-                            col, value=producto[col], key=f"{col}_{i}"
-                        )
+                        if col == "sku":
+                            val = st.text_input(
+                                col, value=producto[col], key=f"{col}_{i}"
+                            )
+                            if val and not val.isdigit():
+                                st.error("El SKU debe contener solo números.")
+                            elif val == "":
+                                st.error("El SKU no puede estar vacío.")
+                            else:
+                                producto[col] = val
+                        else:
+                            producto[col] = st.text_input(
+                                col, value=producto[col], key=f"{col}_{i}"
+                            )
 
             # Botón eliminar producto
             if st.button(f"🗑️ Eliminar producto #{i + 1}", key=f"del_{i}"):

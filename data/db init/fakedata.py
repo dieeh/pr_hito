@@ -7,12 +7,42 @@ from datetime import datetime, timedelta
 DB_PATH = "inventario.db"
 
 
+def generar_rut(i):
+    """
+    Genera RUT simple para pruebas, 10 millones + i.
+    """
+    num = 10000000 + i
+
+    # Calcular DV
+    cuerpo = str(num)
+    factores = [2, 3, 4, 5, 6, 7]
+    factor_idx = 0
+    suma = 0
+
+    for d in reversed(cuerpo):
+        suma += int(d) * factores[factor_idx]
+        factor_idx = (factor_idx + 1) % len(factores)
+
+    resto = 11 - (suma % 11)
+    if resto == 11:
+        dv = "0"
+    elif resto == 10:
+        dv = "K"
+    else:
+        dv = str(resto)
+
+    return f"{cuerpo}-{dv}"
+
+
 def insertar_proveedores(conn, n=5):
     proveedores = []
     for i in range(n):
+        rut = generar_rut(i + 1)
+
         proveedores.append(
             (
                 f"Proveedor {i + 1}",
+                rut,
                 f"contacto{i + 1}@mail.com",
                 f"+56 9 555{i + 1}",
                 "Calle falsa 123",
@@ -24,9 +54,9 @@ def insertar_proveedores(conn, n=5):
 
     conn.executemany(
         """
-        INSERT INTO proveedores(nombre, contacto, telefono, direccion, ordering_cost,
+        INSERT INTO proveedores(nombre, rut, contacto, telefono, direccion, ordering_cost,
             average_lead_time_days, lead_time_variability)
-        VALUES (?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?)
     """,
         proveedores,
     )
@@ -48,12 +78,15 @@ def insertar_categorias(conn, n=3):
     return list(range(1, n + 1))
 
 
-def insertar_productos(conn, proveedores, n=10):
+def insertar_productos(conn, n=10):
     productos = []
     for i in range(n):
+        sku = f"{10000 + i}"  # SKU simple numérico
+
         productos.append(
             (
                 f"Producto {i + 1}",
+                sku,
                 "Descripción de prueba",
                 random.randint(1, 5),  # categoría
                 round(random.uniform(1000, 6000), 1),  # precio unitario
@@ -62,16 +95,15 @@ def insertar_productos(conn, proveedores, n=10):
                 1,
                 round(random.uniform(50, 150), 2),  # holding cost
                 0.95,  # service level target
-                0,
-                0,
             )
         )
 
     conn.executemany(
         """
-        INSERT INTO productos(nombre, descripcion, categoria_id, precio_unitario, stock_actual,
-            unidad_medida, estado, holding_cost, service_level_target, reorder_point, order_quantity)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INSERT INTO productos(nombre, sku, descripcion, categoria_id, precio_unitario,
+            stock_actual, unidad_medida, estado, holding_cost,
+            service_level_target)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """,
         productos,
     )
@@ -171,7 +203,7 @@ if __name__ == "__main__":
 
     proveedores = insertar_proveedores(conn, 10)
     categorias = insertar_categorias(conn, 5)
-    productos = insertar_productos(conn, proveedores, 30)
+    productos = insertar_productos(conn, 30)
     generar_ventas(conn, productos)
     generar_compras(conn, productos, proveedores, 60)
 

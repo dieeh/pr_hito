@@ -15,16 +15,15 @@ CREATE TABLE categorias (
 CREATE TABLE productos (
     producto_id INTEGER PRIMARY KEY AUTOINCREMENT,
     nombre TEXT NOT NULL,
+    sku VARCHAR(50) NOT NULL UNIQUE, -- Código único del producto
     descripcion TEXT,
     categoria_id INTEGER,
     precio_unitario REAL NOT NULL,
     stock_actual INTEGER DEFAULT 0,
-    unidad_medida TEXT,
-    estado INTEGER DEFAULT 1,
+    unidad_medida TEXT, -- Unidad de medida del producto (ej. unidades, kilos, litros)
+    estado INTEGER DEFAULT 1, -- Estado del producto (1: Activo, 0: Inactivo)
     holding_cost REAL DEFAULT 0,
     service_level_target REAL DEFAULT 0,
-    reorder_point INTEGER DEFAULT 0,
-    order_quantity INTEGER DEFAULT 0,
     FOREIGN KEY (categoria_id) REFERENCES categorias(categoria_id)
 );
 
@@ -34,6 +33,7 @@ CREATE TABLE productos (
 CREATE TABLE proveedores (
     proveedor_id INTEGER PRIMARY KEY AUTOINCREMENT,
     nombre TEXT NOT NULL,
+    rut VARCHAR(15) NOT NULL UNIQUE,
     contacto TEXT,
     telefono TEXT,
     direccion TEXT,
@@ -51,7 +51,7 @@ CREATE TABLE vendedores (
     contacto TEXT
 );
 
-INSERT INTO vendedores (nombre, contacto) VALUES ('Admin', 'admin');
+INSERT INTO vendedores (nombre, contacto) VALUES ('Administrador', 'admin@local');
 
 
 -- =========================
@@ -122,6 +122,7 @@ CREATE TABLE metodos_pago (
 );
 
 INSERT INTO metodos_pago (nombre) VALUES ('Efectivo');
+INSERT INTO metodos_pago (nombre) VALUES ('Tarjeta');
 
 
 -- =========================
@@ -159,6 +160,7 @@ CREATE TABLE movimientos_caja (
 CREATE TABLE usuarios (
     usuario_id INTEGER PRIMARY KEY AUTOINCREMENT,
     vendedor_id INTEGER,
+    rut VARCHAR(15) NOT NULL UNIQUE;
     username TEXT NOT NULL UNIQUE,
     password_hash TEXT NOT NULL,
     rol TEXT CHECK(rol IN ('admin','vendedor','supervisor','consulta')) DEFAULT 'vendedor',

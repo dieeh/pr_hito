@@ -2,7 +2,7 @@ import sqlite3
 
 import streamlit as st
 
-DB_PATH = "./data/inventario.db"
+DB_PATH = "./data/inventario-1.db"
 
 
 @st.cache_resource
