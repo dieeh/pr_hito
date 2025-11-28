@@ -243,15 +243,14 @@ def z_from_percent(percent):
     return NormalDist().inv_cdf(p)
 
 
-def calcular_rop(mu_D, sigma_D, L, SLT=95):
+def calcular_rop(mu_D, sigma_D, L, SLT=0.95):
     if mu_D is None or L is None:
         return None
 
     if sigma_D is None:
         sigma_D = 0  # sin variabilidad
 
-    z = z_from_percent(SLT)
-
+    z = z_from_percent(SLT * 100)
     R = mu_D * L + z * sigma_D * sqrt(L)
     return R
 
