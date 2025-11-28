@@ -116,6 +116,15 @@ with tab1:
                 elif not validar_rut(nuevo_rut):
                     st.error("El RUT no es válido.")
                 else:
+                    # Validar duplicado
+                    existe = cursor.execute(
+                        "SELECT 1 FROM proveedores WHERE rut = ?", (nuevo_rut.strip(),)
+                    ).fetchone()
+
+                    if existe:
+                        st.error("Ya existe un proveedor con ese RUT.")
+                        st.stop()
+
                     cursor.execute(
                         """
                         INSERT INTO proveedores (rut, nombre, contacto, telefono, direccion)
@@ -160,7 +169,7 @@ with tab1:
     uploaded_file = st.file_uploader("Selecciona un CSV", type="csv")
 
     if uploaded_file is not None:
-        df = pd.read_csv(uploaded_file)
+        df = pd.read_csv(uploaded_file, sep=",", quotechar='"', encoding="utf-8")
         st.subheader("Vista previa del CSV original:")
         st.dataframe(df.head(10))
 
@@ -219,6 +228,13 @@ with tab1:
             compra_id = cursor.lastrowid
 
             for _, row in pre_df.iterrows():
+                # Validar duplicado
+                if cursor.execute(
+                    "SELECT 1 FROM productos WHERE sku = ?", (row["sku"],)
+                ).fetchone():
+                    st.error(f"El SKU {row['sku']} ya existe. Corrige el CSV.")
+                    st.stop()
+
                 # Insertar producto
                 cursor.execute(
                     f"""
@@ -295,7 +311,20 @@ with tab2:
             if st.button("Guardar proveedor nuevo"):
                 if not nuevo_nombre.strip():
                     st.error("El nombre no puede estar vacío.")
+
+                elif not nuevo_rut.strip():
+                    st.error("El RUT no puede estar vacío.")
+
                 else:
+                    # Validar duplicado
+                    existe = cursor.execute(
+                        "SELECT 1 FROM proveedores WHERE rut = ?", (nuevo_rut.strip(),)
+                    ).fetchone()
+
+                    if existe:
+                        st.error("Ya existe un proveedor con ese RUT.")
+                        st.stop()
+
                     cursor.execute(
                         """
                         INSERT INTO proveedores (nombre, rut, contacto, telefono, direccion)
@@ -385,12 +414,22 @@ with tab2:
                             val = st.text_input(
                                 col, value=producto[col], key=f"{col}_{i}"
                             )
-                            if val and not val.isdigit():
-                                st.error("El SKU debe contener solo números.")
-                            elif val == "":
+
+                            if val == "":
                                 st.error("El SKU no puede estar vacío.")
+                            elif not val.isdigit():
+                                st.error("El SKU debe contener solo números.")
                             else:
-                                producto[col] = val
+                                # Validar duplicado en BD
+                                existe_sku = cursor.execute(
+                                    "SELECT 1 FROM productos WHERE sku = ?", (val,)
+                                ).fetchone()
+
+                                if existe_sku:
+                                    st.error("Ya existe un producto con ese SKU.")
+                                else:
+                                    producto[col] = val
+
                         elif col == "estado":
                             val = st.number_input(
                                 col, min_value=0, value=1, step=1, key=f"{col}_{i}"

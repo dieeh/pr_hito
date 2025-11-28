@@ -1,0 +1,11 @@
+﻿nombre,sku,descripcion,categoria_id,precio_unitario,stock_actual,unidad_medida,estado,holding_cost,service_level_target
+Espresso,1001001,Café en grano tostado,1,2500,50,unidades,1,0.05,0.95
+Americano,1001002,Café filtrado tradicional,1,2000,40,unidades,1,0.04,0.9
+Sándwich Veggie,2001001,Sándwich vegetariano con palta y tomate,2,3500,30,unidades,1,0.06,0.9
+Sándwich Pollo,2001002,Sándwich de pollo grillado con mayo casera,2,3800,25,unidades,1,0.06,0.9
+Jugo Naranja,3001001,Jugo natural exprimido,3,2200,60,litr,1,0.03,0.95
+Batido Proteico,3001002,Batido de vainilla con proteína,3,4500,20,litr,1,0.05,0.95
+Agua Mineral,3001003,Botella de agua mineral 500ml,3,1000,100,litr,1,0.01,0.98
+Ensalada Cesar,2001003,Ensalada con pollo, lechuga y aderezo,2,5000,15,unidades,1,0.07,0.9
+Café Latte,1001003,Café espresso con leche,1,3000,35,unidades,1,0.05,0.95
+Galletas Integrales,2001004,Galletas saludables,2,1200,80,unidades,1,0.02,0.9

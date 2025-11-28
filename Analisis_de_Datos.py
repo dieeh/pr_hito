@@ -64,10 +64,19 @@ poco_stock = pd.read_sql_query(
     """
     SELECT COUNT(*) AS cant
     FROM productos
-    WHERE stock_actual <= 10;
+    WHERE stock_actual <= 15;
 """,
     conn,
 )["cant"][0]
+
+poco_stock2 = pd.read_sql_query(
+    """
+    SELECT *
+    FROM productos
+    WHERE stock_actual <= 15;
+""",
+    conn,
+)
 
 mermas = pd.read_sql_query(
     """
@@ -80,6 +89,15 @@ mermas = pd.read_sql_query(
 if mermas is None:
     mermas = 0
 
+mermas2 = pd.read_sql_query(
+    """
+    SELECT *
+    FROM movimientos_inventario
+    WHERE tipo = 'perdida';
+""",
+    conn,
+)
+
 fuera_stock = pd.read_sql_query(
     """
     SELECT COUNT(*) AS cant
@@ -88,6 +106,28 @@ fuera_stock = pd.read_sql_query(
 """,
     conn,
 )["cant"][0]
+
+fuera_stock2 = pd.read_sql_query(
+    """
+    SELECT *
+    FROM productos
+    WHERE stock_actual = 0;
+""",
+    conn,
+)
+
+
+# --- popup: poco stock ---
+@st.dialog("Productos con Poco Stock")
+def popup_poco_stock():
+    st.dataframe(poco_stock2[["nombre", "sku", "stock_actual"]])
+
+
+# --- popup: fuera de stock ---
+@st.dialog("Productos Fuera de Stock")
+def popup_fuera_stock():
+    st.dataframe(fuera_stock2[["nombre", "sku", "stock_actual"]])
+
 
 valor_inventario = pd.read_sql_query(
     """
@@ -511,13 +551,30 @@ with tab1:
 
     with col3:
         with stylable_container(key="globalmetrics", css_styles=""):
-            column1, column2 = st.columns(2)
-            with column1:
-                st.metric(label="Stock Total", value=int(stock_total))
-                st.metric(label="Poco Stock", value=int(poco_stock))
-            with column2:
-                st.metric(label="Mermas", value=int(mermas))
-                st.metric(label="Fuera de Stock", value=int(fuera_stock))
+            col1, col2 = st.columns(2)
+
+            with col1:
+                st.metric("Stock Total", int(stock_total))
+
+                st.metric(
+                    label="Poco Stock",
+                    value=int(poco_stock),
+                    help="Productos cuyo stock actual es menor a 15 unidades",
+                )
+                if st.button("Detalles de poco stock", key="btn_poco"):
+                    popup_poco_stock()
+
+            with col2:
+                st.metric("Mermas", int(mermas))
+
+                st.metric(
+                    label="Fuera de Stock",
+                    value=int(fuera_stock),
+                    help="Productos con stock igual a 0",
+                )
+                if st.button("Detalles fuera de stock", key="btn_fuera"):
+                    popup_fuera_stock()
+
             st.metric(
                 label="Valor Total del Inventario",
                 value="${:,.2f}".format(int(valor_inventario))
@@ -525,7 +582,6 @@ with tab1:
                 .replace(".", ",")
                 .replace("X", "."),
             )
-            pass
 
     col11, col12 = st.columns([2, 1])
     with col11:
@@ -564,7 +620,7 @@ with tab1:
         st.plotly_chart(fig1, width="stretch")
     with col12:
         with stylable_container(key="WrapperDemandaProductos", css_styles=""):
-            st.text("Productos mas demandados")
+            st.text("Más demandados del mes")
             with stylable_container(key="demandaProductos", css_styles=""):
                 for i, prod in enumerate(top3):
                     # with cols[i]:
@@ -598,8 +654,8 @@ with tab1:
 
                     # st.line_chart(serie.set_index("dia")["total"], height=80)
 
-    with stylable_container(key="dataTable", css_styles=""):
-        pass
+    # with stylable_container(key="dataTable", css_styles=""):
+    #    pass
 
 with tab2:
     st.title("Reportes del Sistema")
